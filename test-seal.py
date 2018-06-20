@@ -1,0 +1,3 @@
+import seal
+
+print('yay')

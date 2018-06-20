@@ -31,8 +31,9 @@ see the encrypted data and perform operations on it.
 
 * For a matrix-matrix multiplication. We would consume some noise budget for every multiplication operation performed.
 Since the number of operations for which a specific element x_ij would depend on the size of the second matrix. UPDATE:
-noise budget consumed w.r.t multiplicative depth. Not number of multiplications. As depth is always two for any given
-matrix. noise budget is not an issue for matrix multiplication. (Verify with arbitrary vector sizes)
+noise budget consumed w.r.t multiplicative depth. Not number of multiplications. As depth=2 for any given
+matrix multiplication, noise budget is not an issue for matrix multiplication. However, cascading of matrix multuiplication
+would increase the multiplicative depth correspondingly. (#TODO:Verify with arbitrary vector sizes)
 
 
 ### Processing steps
@@ -45,5 +46,20 @@ matrix. noise budget is not an issue for matrix multiplication. (Verify with arb
 
 # Progress Report - Jun 21st
 
-* Implemented dot product of floats. 
+* Implemented dot product of floats for fixed length arrays using list of ciphertext.
+
+* Defined custom `CipherMatrix class` which is a numpy matrix of Ciphertext objects. dynamically created when custom
+encrypt function is called.
+
+* Defined pickle based file readers and writers for storing encrypted matrices to file. The purpose of this is to allow
+an external "server" script to read the file, perform the homomorphically encrypted matrix multiplication and store the
+result back in the same file.
+
+# TODO
+
+* Adapt pickle files to include context parameters for 'server' script to generate evaluator object from.
+
+* Documentation of SEAL workflow.
+
+* Saved Trained MNIST model for 2-layer feedforward network 
 

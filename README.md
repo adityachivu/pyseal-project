@@ -7,7 +7,7 @@ Project using PySEAL for Data Security and Ethics course
 * `sudo ./build-docker.sh`
 
 ## Setting up this repo
-* clone [`seal-project`](https://github.com/adityachivu/seal-project)
+* clone [`pyseal-project`](https://github.com/adityachivu/pyseal-project)
 
 ## Running with persistent storage volume
 * `cd ~/seal-project`

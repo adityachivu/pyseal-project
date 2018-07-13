@@ -2,7 +2,7 @@
 Project using PySEAL for Data Security and Ethics course
 
 ## Installing PySEAL
-* clone [PySEAL](https://github.com/Lab41/PySEAL)
+* clone (my fork of) [PySEAL](https://github.com/adityachivu/PySEAL)
 * `cd PySEAL`
 * `sudo ./build-docker.sh`
 

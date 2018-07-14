@@ -116,6 +116,7 @@ class CipherMatrix:
         result_shape = [Ashape[0], Bshape[1]]
 
         result = CipherMatrix(np.zeros(result_shape, dtype=np.int32))
+        result.encrypt()
         plain_result = np.zeros(result_shape, dtype=np.int32)
 
         for i in range(Ashape[0]):
@@ -123,18 +124,19 @@ class CipherMatrix:
                 val = Ciphertext(self.parms)
                 self.encryptor.encrypt(self.encoder.encode(0), val)
 
-                result_array = []
+                result_array = Ashape[1] * [Ciphertext()]
                 for k in range(Ashape[1]):
-                    res = Ciphertext(self.parms)
-                    result_array.append(res)
-                    print("Noise budget in val: " + (str)(
-                        self.decryptor.invariant_noise_budget(res)) + " bits")
+                    # res = Ciphertext()
+                    # result_array.append(res)
+
                     self.evaluator.multiply(A[i, k], B[k, j], result_array[k])
+                    print("Noise budget in val: " + (str)(
+                        self.decryptor.invariant_noise_budget(result_array[k])) + " bits")
                     print(i, j, k)
 
 
                     # self.evaluator.add(val, res)
-                    del res
+
 
                     #
                     #
@@ -145,6 +147,10 @@ class CipherMatrix:
 
                 self.evaluator.add_many(result_array, val)
                 self.evaluator.add(result.encrypted_matrix[i,j], val)
+
+        # temp = Ciphertext(self.parms)
+        #
+        # self.evaluator.multiply(A[0,0], B[0,0])
 
 
         return result
@@ -166,7 +172,7 @@ class CipherMatrix:
         """
         pass
 
-    def encrypt(self, matrix = None):
+    def encrypt(self, matrix = None, keygen = None):
         """
 
         :param matrix:
@@ -180,6 +186,10 @@ class CipherMatrix:
         shape = self.matrix.shape
 
         self.encrypted_matrix = np.empty(shape, dtype = object)
+
+        if keygen is not None:
+            self.public_key = keygen.public_key()
+            self.secret_key = keygen.secret_key()
 
         for i in range(shape[0]):
             for j in range(shape[1]):
@@ -209,6 +219,13 @@ class CipherMatrix:
 
         self._encrypted = False
         return np.copy(self.matrix)
+
+    def get_keygen(self):
+        """
+
+        :return:
+        """
+        return self.keygen
 
 def test():
     print('blah')

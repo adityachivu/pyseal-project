@@ -1595,6 +1595,11 @@ def save_example():
     public_key = keygen.public_key()
     secret_key = keygen.secret_key()
 
+    pk2 = keygen.public_key()
+    sk2 = keygen.secret_key()
+
+    pk3 = keygen.public_key()
+    sk3 = keygen.secret_key()
     # To be able to encrypt, we need to construct an instance of Encryptor. Note that
     # the Encryptor only requires the public key.
     encryptor = Encryptor(context, public_key)

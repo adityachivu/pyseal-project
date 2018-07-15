@@ -23,8 +23,8 @@ ahem.test()
 # cm.save("/seal-project/save/")
 
 
-test = ahem.CipherMatrix()
-test.load("/seal-project/save/0098")
+# test = ahem.CipherMatrix()
+# test.load("/seal-project/save/0098")
 
 print(test)
 

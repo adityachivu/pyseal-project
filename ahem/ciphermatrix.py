@@ -337,5 +337,8 @@ class CipherMatrix:
 
         return
 
-def test():
-    print('blah')
+def main():
+    print("CipherMatrix class definition")
+
+if __name__ == '__main__':
+    main()

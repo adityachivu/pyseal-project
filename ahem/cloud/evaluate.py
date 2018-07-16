@@ -29,3 +29,10 @@ def classify_request(A):
     """
 
 def multiply_request(A, B):
+    """
+
+    :param A:
+    :param B:
+    :return:
+    """
+    pass

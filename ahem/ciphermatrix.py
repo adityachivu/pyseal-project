@@ -20,6 +20,7 @@ from seal import ChooserEvaluator,     \
                  ChooserEvaluator,     \
                  ChooserPoly
 
+from . import *
 
 class CipherMatrix:
     """
@@ -105,13 +106,15 @@ class CipherMatrix:
 
         assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
 
-        result = CipherMatrix()
-
+        # result = CipherMatrix()
+        print("LHS", self._id, "RHS", other._id)
         A = self.encrypted_matrix
         B = other.encrypted_matrix
 
         # A = self.matrix
         # B = other.matrix
+
+        # print(ahem.evaluator)
 
         Ashape = A.shape
         Bshape = B.shape
@@ -120,23 +123,28 @@ class CipherMatrix:
         result_shape = [Ashape[0], Bshape[1]]
 
         result = CipherMatrix()
-        result.encrypt(np.zeros(result_shape, dtype=np.int32), other.get_keygen())
-        plain_result = np.zeros(result_shape, dtype=np.int32)
+        print("result cpmt created")
+        result.encrypted_matrix = np.empty(result_shape, dtype=object)
+        # result.encrypt(np.zeros(result_shape, dtype=np.int32), other.get_keygen())
+        # plain_result = np.zeros(result_shape, dtype=np.int32)
 
         for i in range(Ashape[0]):
             for j in range(Bshape[1]):
-                val = Ciphertext(self.parms)
-                self.encryptor.encrypt(self.encoder.encode(0), val)
+                # val = Ciphertext(self.parms)
+                # self.encryptor.encrypt(self.encoder.encode(0), val)
 
-                result_array = Ashape[1] * [Ciphertext()]
+                # result_array = Ashape[1] * [Ciphertext()]
+                result_array = []
                 for k in range(Ashape[1]):
-                    # res = Ciphertext()
-                    # result_array.append(res)
+                    res = Ciphertext()
 
-                    self.evaluator.multiply(A[i, k], B[k, j], result_array[k])
-                    print("Noise budget in val: " + (str)(
-                        self.decryptor.invariant_noise_budget(result_array[k])) + " bits")
-                    print(i, j, k)
+
+                    self.evaluator.multiply(A[i, k], B[k, j], res)
+
+                    result_array.append(res)
+                    # print("Noise budget in val: " + (str)(
+                    #     self.decryptor.invariant_noise_budget(result_array[k])) + " bits")
+                    # print(i, j, k)
 
 
                     # self.evaluator.add(val, res)
@@ -148,9 +156,9 @@ class CipherMatrix:
                     # plain_result[i,j] = plain_result[i,j] + temp
                     #
 
-
-                self.evaluator.add_many(result_array, val)
-                self.evaluator.add(result.encrypted_matrix[i,j], val)
+                result.encrypted_matrix[i, j] = Ciphertext()
+                self.evaluator.add_many(result_array, result.encrypted_matrix[i,j])
+                # self.evaluator.add(result.encrypted_matrix[i,j], val)
 
         # temp = Ciphertext(self.parms)
         #
@@ -172,6 +180,7 @@ class CipherMatrix:
         result.public_key = other.keygen.public_key()
         result.encryptor = Encryptor(result.context, result.public_key)
         result.decryptor = Decryptor(result.context, result.secret_key)
+        result._encrypted = True
         return result
         # return plain_result
 
@@ -193,7 +202,7 @@ class CipherMatrix:
 
         for i in range(shape[0]):
             for j in range(shape[1]):
-                print('saving', i, '-', j)
+                # print('saving', i, '-', j)
                 element_name = str(i)+'-'+str(j)+'.ahem'
                 (self.encrypted_matrix[i,j]).save(os.path.join(save_dir, element_name))
 
@@ -242,12 +251,12 @@ class CipherMatrix:
             self.decryptor = Decryptor(self.context, self.secret_key)
 
         else:
-
+            pass
 
         self._encrypted = True
 
         print(M, N)
-        print(index_list)
+        # print(index_list)
 
 
     def encrypt(self, matrix = None, keygen = None):
@@ -337,8 +346,14 @@ class CipherMatrix:
 
         return
 
+
+def test():
+    print('blah')
+
+
 def main():
     print("CipherMatrix class definition")
+
 
 if __name__ == '__main__':
     main()

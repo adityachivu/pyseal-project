@@ -7,13 +7,15 @@ host = "172.17.0.2"
 print(host)
 port = 9005
 
-def send_CipherMatrix(socket, path):
+def send_CipherMatrix(path):
     """
 
     :param socket:
     :param path:
     :return:
     """
+    s = socket.socket()
+    s.connect((host, port))
 
     directory = os.listdir(path)
     for files in directory:
@@ -38,12 +40,16 @@ def send_CipherMatrix(socket, path):
     print('Directory Sent')
     socket.close()
 
-def recv_CipherMatrix(socket, path):
+def recv_CipherMatrix(path):
     """
 
     :param path:
     :return:
     """
+
+    s = socket.socket()
+    s.connect((host, port))
+
     while(True):
         size = socket.recv(16)  # Note that you limit your filename length to 255 bytes.
         if not size:
@@ -73,18 +79,14 @@ def recv_CipherMatrix(socket, path):
 
 path = "/seal-project/cloud/"
 
-s = socket.socket()
-s.connect((host, port))
-send_CipherMatrix(s, path)
 
-s = socket.socket()
-s.connect((host, port))
-send_CipherMatrix(s, path)
 
-s = socket.socket()
-s.connect((host, port))
+
+send_CipherMatrix(path)
+
+
 path = "/seal-project/result_receive/"
-recv_CipherMatrix(s, path)
+recv_CipherMatrix(path)
 
 
 

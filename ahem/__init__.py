@@ -1,8 +1,10 @@
 from . import ciphermatrix
 from .ciphermatrix import *
+from .ciphermatrix import EncryptionParameters, SEALContext
 
 from . import cloud
-from .cloud import evaluate
+from .cloud import *
+from .cloud.evaluate import *
 
 parms = EncryptionParameters()
 parms.set_poly_modulus("1x^8192 + 1")

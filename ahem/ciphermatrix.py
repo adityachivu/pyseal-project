@@ -106,15 +106,9 @@ class CipherMatrix:
 
         assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
 
-        # result = CipherMatrix()
         print("LHS", self._id, "RHS", other._id)
         A = self.encrypted_matrix
         B = other.encrypted_matrix
-
-        # A = self.matrix
-        # B = other.matrix
-
-        # print(ahem.evaluator)
 
         Ashape = A.shape
         Bshape = B.shape
@@ -125,64 +119,24 @@ class CipherMatrix:
         result = CipherMatrix()
         print("result cpmt created")
         result.encrypted_matrix = np.empty(result_shape, dtype=object)
-        # result.encrypt(np.zeros(result_shape, dtype=np.int32), other.get_keygen())
-        # plain_result = np.zeros(result_shape, dtype=np.int32)
 
         for i in range(Ashape[0]):
             for j in range(Bshape[1]):
-                # val = Ciphertext(self.parms)
-                # self.encryptor.encrypt(self.encoder.encode(0), val)
 
-                # result_array = Ashape[1] * [Ciphertext()]
                 result_array = []
                 for k in range(Ashape[1]):
+
                     res = Ciphertext()
-
-
                     self.evaluator.multiply(A[i, k], B[k, j], res)
 
                     result_array.append(res)
-                    # print("Noise budget in val: " + (str)(
-                    #     self.decryptor.invariant_noise_budget(result_array[k])) + " bits")
-                    # print(i, j, k)
-
-
-                    # self.evaluator.add(val, res)
-
-
-                    #
-                    #
-                    # temp = A[i,k] * B[k,j]
-                    # plain_result[i,j] = plain_result[i,j] + temp
-                    #
 
                 result.encrypted_matrix[i, j] = Ciphertext()
                 self.evaluator.add_many(result_array, result.encrypted_matrix[i,j])
-                # self.evaluator.add(result.encrypted_matrix[i,j], val)
 
-        # temp = Ciphertext(self.parms)
-        #
-        # self.evaluator.multiply(A[0,0], B[0,0], temp)
-        #
-        # # temp.decrypt()
-        # plain_temp = Plaintext()
-        #
-        # self.decryptor.decrypt(A[0,0], plain_temp)
-        # print(self.encoder.decode_int32(plain_temp))
-        #
-        # other.decryptor.decrypt(B[0,0], plain_temp)
-        # print(self.encoder.decode_int32(plain_temp))
-        #
-        # other.decryptor.decrypt(temp, plain_temp)
-        # return self.encoder.decode_int32(plain_temp)
-
-        result.secret_key = other.keygen.secret_key()
-        result.public_key = other.keygen.public_key()
-        result.encryptor = Encryptor(result.context, result.public_key)
-        result.decryptor = Decryptor(result.context, result.secret_key)
         result._encrypted = True
+
         return result
-        # return plain_result
 
     def save(self, path):
         """
@@ -204,23 +158,22 @@ class CipherMatrix:
             for j in range(shape[1]):
                 # print('saving', i, '-', j)
                 element_name = str(i)+'-'+str(j)+'.ahem'
-                (self.encrypted_matrix[i,j]).save(os.path.join(save_dir, element_name))
+                self.encrypted_matrix[i,j].save(os.path.join(save_dir, element_name))
 
-        self.public_key.save("/keys/"+"."+self._id+'.whepkey')
         self.secret_key.save("/keys/"+"."+self._id+'.wheskey')
 
-        return
+        return save_dir
 
 
-    def load(self, path, keygen = None):
+    def load(self, path, load_secret_key = False):
         """
 
         :param path:
         :return:
         """
 
-        self.name = path.split('/')[-1]
-        print(self.name)
+        self._id = path.split('/')[-1]
+        print("Loading Matrix:", self._id)
 
         file_list = os.listdir(path)
         index_list = [[file.split('.')[0].split('-'), file] for file in file_list]
@@ -238,25 +191,10 @@ class CipherMatrix:
             self.encrypted_matrix[i,j] = Ciphertext()
             self.encrypted_matrix[i,j].load(os.path.join(path, index[1]))
 
-        if keygen is None:
-            key = seal.SecretKey()
-            key.load('/keys/.'+self.name+'.wheskey')
-            self.secret_key = key
-
-            key = seal.PublicKey()
-            key.load('/keys/.'+self.name+'.whepkey')
-            self.public_key = key
-
-            self.encryptor = Encryptor(self.context, self.public_key)
-            self.decryptor = Decryptor(self.context, self.secret_key)
-
-        else:
-            pass
+        if load_secret_key:
+            self.secret_key.load("/keys/"+"."+self._id+'.wheskey')
 
         self._encrypted = True
-
-        print(M, N)
-        # print(index_list)
 
 
     def encrypt(self, matrix = None, keygen = None):
@@ -277,10 +215,7 @@ class CipherMatrix:
         self.encrypted_matrix = np.empty(shape, dtype = object)
 
         if keygen is not None:
-            self.public_key = keygen.public_key()
-            self.secret_key = keygen.secret_key()
-            self.encryptor = Encryptor(self.context, self.public_key)
-            self.decryptor = Decryptor(self.context, self.secret_key)
+            self._update_cryptors(keygen)
 
         for i in range(shape[0]):
             for j in range(shape[1]):
@@ -309,10 +244,7 @@ class CipherMatrix:
         self.matrix = np.empty(shape)
 
         if keygen is not None:
-            self.public_key = keygen.public_key()
-            self.secret_key = keygen.secret_key()
-            self.encryptor = Encryptor(self.context, self.public_key)
-            self.decryptor = Decryptor(self.context, self.secret_key)
+            self._update_cryptors(keygen)
 
         for i in range(shape[0]):
             for j in range(shape[1]):

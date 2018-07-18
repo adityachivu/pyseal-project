@@ -49,7 +49,7 @@ def send_CipherMatrix(socket, path):
     """
     directory = os.listdir(path)
     for files in directory:
-        print(files)
+        # print(files)
         filename = files
         size = len(filename)
         size = bin(size)[2:].zfill(16)  # encode filename size as 16 bit binary
@@ -78,7 +78,7 @@ def recv_CipherMatrix(socket, path):
     :return:
     """
 
-
+    #
     #     socket.close()
     #     print("error")
     #     return
@@ -107,6 +107,6 @@ def recv_CipherMatrix(socket, path):
             filesize -= len(data)
 
         file_to_write.close()
-        print("File received succesfully")
+        # print("File received succesfully")
 
     socket.close()

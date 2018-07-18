@@ -51,15 +51,15 @@ would increase the multiplicative depth correspondingly. (#TODO:Verify with arbi
 * Defined custom `CipherMatrix class` which is a numpy matrix of Ciphertext objects. dynamically created when custom
 encrypt function is called.
 
-* Defined pickle based file readers and writers for storing encrypted matrices to file. The purpose of this is to allow
-an external "server" script to read the file, perform the homomorphically encrypted matrix multiplication and store the
-result back in the same file.
-
+* Added `python_save`functions to SEAL to providesave/load functionality for Ciphertext in PySEAL
 # TODO
 
 * Adapt pickle files to include context parameters for 'server' script to generate evaluator object from.
 
 * Documentation of SEAL workflow.
 
-* Saved Trained MNIST model for 2-layer feedforward network 
+* Saved Trained MNIST model for 2-layer feedforward network.
+
+
+`sudo docker network connect $network-name $container-name`
 

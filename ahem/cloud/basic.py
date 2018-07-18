@@ -40,6 +40,20 @@ def setup_server(port):
     return serversock
 
 
+def close_server():
+    """
+
+    :return:
+    """
+    global HOST
+    global PORT
+
+    s = socket.socket()
+    s.connect((HOST, PORT))
+    s.send("close".encode())
+    s.close()
+
+
 def send_CipherMatrix(socket, path):
     """
 

@@ -28,6 +28,9 @@ def main():
         elif option == "subtract":
             cloud.process_subtract_request(serversock)
 
+        elif option == "classify":
+            cloud.process_classify_request(serversock)
+
         elif option == "close":
             close_server = True
 

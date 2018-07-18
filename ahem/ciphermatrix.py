@@ -33,14 +33,14 @@ class CipherMatrix:
         """
 
         self.parms = EncryptionParameters()
-        self.parms.set_poly_modulus("1x^8192 + 1")
-        self.parms.set_coeff_modulus(seal.coeff_modulus_128(8192))
+        self.parms.set_poly_modulus("1x^2048 + 1")
+        self.parms.set_coeff_modulus(seal.coeff_modulus_128(2048))
         self.parms.set_plain_modulus(1 << 8)
 
         self.context = SEALContext(self.parms)
 
-        self.encoder = IntegerEncoder(self.context.plain_modulus())
-        self.floatencoder = FractionalEncoder(self.context.plain_modulus(), self.context.poly_modulus(), 64, 32, 3)
+        # self.encoder = IntegerEncoder(self.context.plain_modulus())
+        self.encoder = FractionalEncoder(self.context.plain_modulus(), self.context.poly_modulus(), 64, 32, 3)
 
         self.keygen = KeyGenerator(self.context)
         self.public_key = self.keygen.public_key()
@@ -97,6 +97,75 @@ class CipherMatrix:
 
         return str(type(self))
 
+    def __add__(self, other):
+        """
+
+        :param other:
+        :return:
+        """
+        assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
+
+        A_enc = self._encrypted
+        B_enc = other._encrypted
+
+        if A_enc:
+            A = self.encrypted_matrix
+        else:
+            A = self.matrix
+
+        if B_enc:
+            B = other.encrypted_matrix
+        else
+            B = self.matrix
+
+        assert A.shape == B.shape, "Dimension mismatch, Matrices must be of same shape"
+
+        shape = A.shape
+
+        result = CipherMatrix(np.zeros(shape, dtype=np.int32))
+        result._update_cryptors(self.get_keygen())
+
+        if A_enc:
+            if B_enc:
+
+                res_mat = result.encrypted_matrix
+                for i in range(shape[0]):
+                    for j in range(shape[1]):
+                        self.evaluator.add(A[i,j], B[i,j], res_mat[i,j])
+
+                result._encrypted = True
+
+            else:
+                res_mat = result.encrypted_matrix
+                for i in range(shape[0]):
+                    for j in range(shape[1]):
+                        self.evaluator.plain_add(A[i, j], B[i, j], res_mat[i, j])
+
+                result._encrypted = True
+
+        else:
+            if B_enc:
+
+                res_mat = result.encrypted_matrix
+                for i in range(shape[0]):
+                    for j in range(shape[1]):
+                        self.evaluator.plain_add(B[i, j], A[i, j], res_mat[i, j])
+
+                result._encrypted = True
+
+            else:
+                res_mat = result.matrix
+
+                res_mat = A + B
+                result._encrypted = False
+
+
+        return result
+
+
+
+
+
     def __mul__(self, other):
         """
 
@@ -106,7 +175,7 @@ class CipherMatrix:
 
         assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
 
-        print("LHS", self._id, "RHS", other._id)
+        # print("LHS", self._id, "RHS", other._id)
         A = self.encrypted_matrix
         B = other.encrypted_matrix
 
@@ -164,7 +233,6 @@ class CipherMatrix:
 
         return save_dir
 
-
     def load(self, path, load_secret_key = False):
         """
 
@@ -195,7 +263,6 @@ class CipherMatrix:
             self.secret_key.load("/keys/"+"."+self._id+'.wheskey')
 
         self._encrypted = True
-
 
     def encrypt(self, matrix = None, keygen = None):
         """
@@ -280,7 +347,7 @@ class CipherMatrix:
 
 
 def test():
-    print('blah')
+    print('----------------WELCOME TO AHEM-------------------')
 
 
 def main():

@@ -7,7 +7,8 @@ ahem.setup_host("172.17.0.3", port)
 
 keygen = ahem.KeyGenerator(ahem.context)
 
-mat = np.random.randint(0, 10, [3,8])
+# mat = np.random.randint(0, 10, [3,8])
+mat = np.random.random(size=[4,4])
 mat2 = 2*mat
 mat2 = mat2.T
 
@@ -24,8 +25,21 @@ B = ahem.CipherMatrix()
 A.encrypt(mat, keygen)
 B.encrypt(mat2, keygen)
 
-result = ahem.cloud.multiply_request(A, B)
+result = ahem.cloud.add_request(A, B)
+print("\nResult Loaded, Decrypted")
+res_mat = result.decrypt(keygen=keygen)
+print(res_mat)
+print("\nExpected Result:")
+print(np.matmul(mat, mat2))
 
+result = ahem.cloud.subtract_request(A, B)
+print("\nResult Loaded, Decrypted")
+res_mat = result.decrypt(keygen=keygen)
+print(res_mat)
+print("\nExpected Result:")
+print(np.matmul(mat, mat2))
+
+result = ahem.cloud.multiply_request(A, B)
 print("\nResult Loaded, Decrypted")
 res_mat = result.decrypt(keygen=keygen)
 print(res_mat)

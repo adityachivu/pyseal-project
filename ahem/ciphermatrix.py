@@ -22,6 +22,7 @@ from seal import ChooserEvaluator,     \
 
 from . import *
 
+
 class CipherMatrix:
     """
 
@@ -51,14 +52,17 @@ class CipherMatrix:
 
         self.evaluator = Evaluator(self.context)
 
+        self._saved = False
         self._encrypted = False
         self._id = '{0:04d}'.format(np.random.randint(1000))
 
         if matrix is not None:
             assert len(matrix.shape) == 2, "Only 2D numpy matrices accepted currently"
             self.matrix = np.copy(matrix)
-            self.encrypted_matrix = None
-            self.encrypt()
+            self.encrypted_matrix = np.empty(self.matrix.shape, dtype=object)
+            for i in range(self.matrix.shape[0]):
+                for j in range(self.matrix.shape[1]):
+                    self.encrypted_matrix[i,j] = Ciphertext()
 
         else:
             self.matrix = None
@@ -72,8 +76,10 @@ class CipherMatrix:
 
         :return:
         """
-        if self.matrix is not None:
-            return self.matrix
+        print("Encrypted:", self._encrypted)
+        if not self._encrypted:
+            print(self.matrix)
+            return ""
 
         else:
             return '[]'
@@ -103,7 +109,7 @@ class CipherMatrix:
         :param other:
         :return:
         """
-        assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
+        assert isinstance(other, CipherMatrix), "Can only be added with a CipherMatrix"
 
         A_enc = self._encrypted
         B_enc = other._encrypted
@@ -115,8 +121,8 @@ class CipherMatrix:
 
         if B_enc:
             B = other.encrypted_matrix
-        else
-            B = self.matrix
+        else:
+            B = other.matrix
 
         assert A.shape == B.shape, "Dimension mismatch, Matrices must be of same shape"
 
@@ -139,7 +145,7 @@ class CipherMatrix:
                 res_mat = result.encrypted_matrix
                 for i in range(shape[0]):
                     for j in range(shape[1]):
-                        self.evaluator.plain_add(A[i, j], B[i, j], res_mat[i, j])
+                        self.evaluator.add_plain(A[i, j], self.encoder.encode(B[i, j]), res_mat[i, j])
 
                 result._encrypted = True
 
@@ -149,22 +155,36 @@ class CipherMatrix:
                 res_mat = result.encrypted_matrix
                 for i in range(shape[0]):
                     for j in range(shape[1]):
-                        self.evaluator.plain_add(B[i, j], A[i, j], res_mat[i, j])
+                        self.evaluator.add_plain(B[i, j], self.encoder.encode(A[i, j]), res_mat[i, j])
 
                 result._encrypted = True
 
             else:
-                res_mat = result.matrix
 
-                res_mat = A + B
+                result.matrix = A + B
                 result._encrypted = False
-
 
         return result
 
 
+    def __sub__(self, other):
+        """
 
+        :param other:
+        :return:
+        """
+        assert isinstance(other, CipherMatrix)
+        if other._encrypted:
+            shape = other.encrypted_matrix.shape
 
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    self.evaluator.negate(other.encrypted_matrix[i,j])
+
+        else:
+            other.matrix = -1 * other.matrix
+
+        return self + other
 
     def __mul__(self, other):
         """
@@ -173,7 +193,7 @@ class CipherMatrix:
         :return:
         """
 
-        assert isinstance(other, CipherMatrix), "Can only be multiplied with a cipher matrix"
+        assert isinstance(other, CipherMatrix), "Can only be multiplied with a CipherMatrix"
 
         # print("LHS", self._id, "RHS", other._id)
         A = self.encrypted_matrix
@@ -186,7 +206,6 @@ class CipherMatrix:
         result_shape = [Ashape[0], Bshape[1]]
 
         result = CipherMatrix()
-        print("result cpmt created")
         result.encrypted_matrix = np.empty(result_shape, dtype=object)
 
         for i in range(Ashape[0]):
@@ -214,14 +233,19 @@ class CipherMatrix:
         :return:
         """
 
+        save_dir = os.path.join(path, self._id)
+
+        if self._saved:
+            print("CipherMatrix already saved")
+
+        else:
+            assert not os.path.isdir(save_dir), "Directory already exists"
+            os.mkdir(save_dir)
+
         if not self._encrypted:
             self.encrypt()
 
         shape = self.encrypted_matrix.shape
-
-        save_dir = os.path.join(path, self._id)
-        assert not os.path.isdir(save_dir), "Directory already exists"
-        os.mkdir(save_dir)
 
         for i in range(shape[0]):
             for j in range(shape[1]):
@@ -231,12 +255,14 @@ class CipherMatrix:
 
         self.secret_key.save("/keys/"+"."+self._id+'.wheskey')
 
+        self._saved = True
         return save_dir
 
     def load(self, path, load_secret_key = False):
         """
 
         :param path:
+        :param load_secret_key:
         :return:
         """
 
@@ -262,6 +288,7 @@ class CipherMatrix:
         if load_secret_key:
             self.secret_key.load("/keys/"+"."+self._id+'.wheskey')
 
+        self.matrix = np.empty(self.encrypted_matrix.shape)
         self._encrypted = True
 
     def encrypt(self, matrix = None, keygen = None):
@@ -271,7 +298,7 @@ class CipherMatrix:
         :return:
         """
 
-        assert not self._encrypted and self.encrypted_matrix is None, "Matrix already encrypted"
+        assert not self._encrypted, "Matrix already encrypted"
 
         if matrix is not None:
             assert self.matrix is None, "matrix already exists"
@@ -290,8 +317,6 @@ class CipherMatrix:
                 self.encrypted_matrix[i,j] = Ciphertext()
                 self.encryptor.encrypt(val, self.encrypted_matrix[i,j])
 
-        del self.matrix
-        self.matrix = None
         self._encrypted = True
 
     def decrypt(self, encrypted_matrix = None, keygen = None):
@@ -303,7 +328,7 @@ class CipherMatrix:
         if encrypted_matrix is not None:
             self.encrypted_matrix = encrypted_matrix
 
-        assert self._encrypted and self.matrix is None, "No encrypted matrix"
+        assert self._encrypted, "No encrypted matrix"
 
         del self.matrix
         shape = self.encrypted_matrix.shape
@@ -317,7 +342,7 @@ class CipherMatrix:
             for j in range(shape[1]):
                 plain_text = Plaintext()
                 self.decryptor.decrypt(self.encrypted_matrix[i,j], plain_text)
-                self.matrix[i,j] = self.encoder.decode_int32(plain_text)
+                self.matrix[i,j] = self.encoder.decode(plain_text)
 
         self._encrypted = False
         return np.copy(self.matrix)

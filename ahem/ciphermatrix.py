@@ -70,7 +70,6 @@ class CipherMatrix:
 
         print(self._id, "Created")
 
-
     def __repr__(self):
         """
 
@@ -124,7 +123,7 @@ class CipherMatrix:
         else:
             B = other.matrix
 
-        assert A.shape == B.shape, "Dimension mismatch, Matrices must be of same shape"
+        assert A.shape == B.shape, "Dimension mismatch, Matrices must be of same shape. Got {} and {}".format(A.shape, B.shape)
 
         shape = A.shape
 
@@ -166,7 +165,6 @@ class CipherMatrix:
 
         return result
 
-
     def __sub__(self, other):
         """
 
@@ -196,8 +194,18 @@ class CipherMatrix:
         assert isinstance(other, CipherMatrix), "Can only be multiplied with a CipherMatrix"
 
         # print("LHS", self._id, "RHS", other._id)
-        A = self.encrypted_matrix
-        B = other.encrypted_matrix
+        A_enc = self._encrypted
+        B_enc = other._encrypted
+
+        if A_enc:
+            A = self.encrypted_matrix
+        else:
+            A = self.matrix
+
+        if B_enc:
+            B = other.encrypted_matrix
+        else:
+            B = other.matrix
 
         Ashape = A.shape
         Bshape = B.shape
@@ -205,24 +213,63 @@ class CipherMatrix:
         assert Ashape[1] == Bshape[0], "Dimensionality mismatch"
         result_shape = [Ashape[0], Bshape[1]]
 
-        result = CipherMatrix()
-        result.encrypted_matrix = np.empty(result_shape, dtype=object)
+        result = CipherMatrix(np.zeros(shape=result_shape))
 
-        for i in range(Ashape[0]):
-            for j in range(Bshape[1]):
+        if A_enc:
+            if B_enc:
 
-                result_array = []
-                for k in range(Ashape[1]):
+                for i in range(Ashape[0]):
+                    for j in range(Bshape[1]):
 
-                    res = Ciphertext()
-                    self.evaluator.multiply(A[i, k], B[k, j], res)
+                        result_array = []
+                        for k in range(Ashape[1]):
 
-                    result_array.append(res)
+                            res = Ciphertext()
+                            self.evaluator.multiply(A[i, k], B[k, j], res)
 
-                result.encrypted_matrix[i, j] = Ciphertext()
-                self.evaluator.add_many(result_array, result.encrypted_matrix[i,j])
+                            result_array.append(res)
 
-        result._encrypted = True
+                        self.evaluator.add_many(result_array, result.encrypted_matrix[i,j])
+
+                result._encrypted = True
+
+            else:
+
+                for i in range(Ashape[0]):
+                    for j in range(Bshape[1]):
+
+                        result_array = []
+                        for k in range(Ashape[1]):
+                            res = Ciphertext()
+                            self.evaluator.multiply_plain(A[i, k], self.encoder.encode(B[k, j]), res)
+
+                            result_array.append(res)
+
+                        self.evaluator.add_many(result_array, result.encrypted_matrix[i, j])
+
+                result._encrypted = True
+
+        else:
+            if B_enc:
+
+                for i in range(Ashape[0]):
+                    for j in range(Bshape[1]):
+
+                        result_array = []
+                        for k in range(Ashape[1]):
+                            res = Ciphertext()
+                            self.evaluator.multiply_plain(B[i, k], self.encoder.encode(A[k, j]), res)
+
+                            result_array.append(res)
+
+                        self.evaluator.add_many(result_array, result.encrypted_matrix[i, j])
+
+                result._encrypted = True
+
+            else:
+
+                result.matrix = np.matmul(A, B)
+                result._encrypted = False
 
         return result
 
@@ -249,7 +296,7 @@ class CipherMatrix:
 
         for i in range(shape[0]):
             for j in range(shape[1]):
-                # print('saving', i, '-', j)
+
                 element_name = str(i)+'-'+str(j)+'.ahem'
                 self.encrypted_matrix[i,j].save(os.path.join(save_dir, element_name))
 
@@ -272,9 +319,8 @@ class CipherMatrix:
         file_list = os.listdir(path)
         index_list = [[file.split('.')[0].split('-'), file] for file in file_list]
 
-        M = int(max([ind[0][0] for ind in index_list])) + 1
-        N = int(max([ind[0][1] for ind in index_list])) + 1
-
+        M = int(max([int(ind[0][0]) for ind in index_list])) + 1
+        N = int(max([int(ind[0][1]) for ind in index_list])) + 1
         del self.encrypted_matrix
         self.encrypted_matrix = np.empty([M, N], dtype=object)
 
@@ -372,7 +418,7 @@ class CipherMatrix:
 
 
 def test():
-    print('----------------WELCOME TO AHEM-------------------')
+    print('---------------------WELCOME TO AHEM------------------------')
 
 
 def main():
